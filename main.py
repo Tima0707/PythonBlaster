@@ -25,33 +25,152 @@ GRID_OFFSET_Y = 100
 PANEL_CELL_SIZE = 35
 FPS = 60
 
-# Цвета - улучшенная палитра
-BACKGROUND = (15, 20, 30)
-GRID_COLOR = (40, 50, 70)
-GRID_HIGHLIGHT = (70, 90, 120)
+# Цвета — неоновая палитра
+BACKGROUND_TOP = (3, 10, 26)
+BACKGROUND_BOTTOM = (10, 28, 60)
+MENU_BACKGROUND_TOP = (5, 16, 32)
+MENU_BACKGROUND_BOTTOM = (4, 10, 24)
+NEON_ACCENT = (0, 220, 255)
+NEON_SECONDARY = (0, 145, 255)
+GRID_COLOR = (25, 60, 120)
+GRID_HIGHLIGHT = (0, 175, 255)
+GRID_BACKGROUND = (14, 26, 58)
 CELL_COLORS = [
-    (41, 128, 185),  # Синий
-    (39, 174, 96),  # Зеленый
-    (142, 68, 173),  # Фиолетовый
-    (230, 126, 34),  # Оранжевый
-    (231, 76, 60),  # Красный
-    (26, 188, 156),  # Бирюзовый
-    (241, 196, 15),  # Желтый
+    (0, 136, 255),
+    (0, 166, 255),
+    (0, 110, 220),
+    (32, 120, 255),
+    (70, 160, 255),
+    (16, 90, 200),
+    (40, 140, 255),
 ]
-TEXT_COLOR = (236, 240, 241)
-HIGHLIGHT_COLOR = (52, 152, 219)
-VALID_PLACEMENT_COLOR = (46, 204, 113)
-INVALID_PLACEMENT_COLOR = (231, 76, 60)
+TEXT_COLOR = (230, 240, 255)
+HIGHLIGHT_COLOR = NEON_ACCENT
+VALID_PLACEMENT_COLOR = NEON_ACCENT
+INVALID_PLACEMENT_COLOR = (120, 0, 255)
 GHOST_ALPHA = 150
-PANEL_BG = (30, 40, 55)
-BUTTON_COLOR = (41, 128, 185)
-BUTTON_HOVER_COLOR = (52, 152, 219)
-CORRECT_COLOR = (46, 204, 113)
-WRONG_COLOR = (231, 76, 60)
-MENU_BG = (20, 30, 48)
-CODE_EDITOR_BG = (25, 35, 45)
-CODE_EDITOR_TEXT = (220, 220, 220)
-CODE_LINE_NUMBERS = (100, 100, 120)
+PANEL_BG = (18, 32, 68)
+BUTTON_COLOR = (20, 90, 210)
+BUTTON_HOVER_COLOR = (30, 130, 255)
+CORRECT_COLOR = NEON_ACCENT
+WRONG_COLOR = (120, 40, 220)
+MENU_BG = MENU_BACKGROUND_BOTTOM
+CODE_EDITOR_BG = (12, 24, 52)
+CODE_EDITOR_TEXT = (220, 230, 250)
+CODE_LINE_NUMBERS = (90, 120, 170)
+
+
+def lighten_color(color: Tuple[int, int, int], factor: float) -> Tuple[int, int, int]:
+    """Осветляет цвет на заданный коэффициент."""
+    factor = max(0.0, min(1.0, factor))
+    return tuple(int(c + (255 - c) * factor) for c in color)
+
+
+def darken_color(color: Tuple[int, int, int], factor: float) -> Tuple[int, int, int]:
+    """Затемняет цвет на заданный коэффициент."""
+    factor = max(0.0, min(1.0, factor))
+    return tuple(int(c * (1 - factor)) for c in color)
+
+
+_gradient_cache: Dict[Tuple[int, int, Tuple[int, int, int], Tuple[int, int, int]], pygame.Surface] = {}
+
+
+def get_vertical_gradient(size: Tuple[int, int], top_color: Tuple[int, int, int],
+                          bottom_color: Tuple[int, int, int]) -> pygame.Surface:
+    """Возвращает вертикальный градиент с кэшированием."""
+    key = (size[0], size[1], top_color, bottom_color)
+    cached = _gradient_cache.get(key)
+    if cached and cached.get_size() == size:
+        return cached
+
+    width, height = size
+    gradient = pygame.Surface((width, height), pygame.SRCALPHA)
+    if height <= 1:
+        gradient.fill((*top_color, 255))
+    else:
+        for y in range(height):
+            ratio = y / (height - 1)
+            color = tuple(
+                int(top_color[i] + (bottom_color[i] - top_color[i]) * ratio)
+                for i in range(3)
+            )
+            pygame.draw.line(gradient, (*color, 255), (0, y), (width, y))
+
+    _gradient_cache[key] = gradient
+    return gradient
+
+
+def draw_glow(surface: pygame.Surface, rect: pygame.Rect, color: Tuple[int, int, int],
+              spread: int = 14, max_alpha: int = 90, border_radius: int = 12) -> None:
+    """Рисует неоновое свечение вокруг прямоугольника."""
+    glow_surface = pygame.Surface((rect.width + spread * 2, rect.height + spread * 2), pygame.SRCALPHA)
+    for i in range(spread, 0, -1):
+        alpha = int(max_alpha * (i / spread) ** 2)
+        inflate = i * 2
+        glow_rect = pygame.Rect(spread - i, spread - i,
+                                rect.width + inflate, rect.height + inflate)
+        pygame.draw.rect(
+            glow_surface,
+            (*color, alpha),
+            glow_rect,
+            border_radius=max(0, border_radius + i // 2)
+        )
+    surface.blit(glow_surface, (rect.x - spread, rect.y - spread), special_flags=pygame.BLEND_ADD)
+
+
+def draw_neon_panel(surface: pygame.Surface, rect: pygame.Rect, border_radius: int = 12,
+                    top_color: Optional[Tuple[int, int, int]] = None,
+                    bottom_color: Optional[Tuple[int, int, int]] = None,
+                    glow_color: Tuple[int, int, int] = NEON_ACCENT) -> None:
+    """Рисует панель с градиентом и неоновым свечением."""
+    draw_glow(surface, rect, glow_color, spread=16, max_alpha=80, border_radius=border_radius + 6)
+    panel_surface = pygame.Surface(rect.size, pygame.SRCALPHA)
+    top = top_color or lighten_color(PANEL_BG, 0.2)
+    bottom = bottom_color or darken_color(PANEL_BG, 0.1)
+    panel_surface.blit(get_vertical_gradient(rect.size, top, bottom), (0, 0))
+
+    pygame.draw.rect(panel_surface, (*glow_color, 140), panel_surface.get_rect(),
+                     2, border_radius=border_radius)
+    inner_rect = panel_surface.get_rect().inflate(-8, -8)
+    if inner_rect.width > 0 and inner_rect.height > 0:
+        pygame.draw.rect(panel_surface, (*glow_color, 35), inner_rect,
+                         border_radius=max(0, border_radius - 4))
+
+    surface.blit(panel_surface, rect.topleft)
+
+
+def draw_dynamic_background(surface: pygame.Surface, top_color: Tuple[int, int, int],
+                            bottom_color: Tuple[int, int, int],
+                            accent_color: Tuple[int, int, int]) -> None:
+    """Рисует динамический фон с градиентом и неоновыми линиями."""
+    width, height = surface.get_size()
+    surface.blit(get_vertical_gradient((width, height), top_color, bottom_color), (0, 0))
+
+    overlay = pygame.Surface((width, height), pygame.SRCALPHA)
+    phase = pygame.time.get_ticks() / 1000.0
+    spacing = 160
+    shift = (phase * 40) % spacing
+
+    for x in range(-height, width + spacing, spacing):
+        start = (x + shift, 0)
+        end = (x + height + shift, height)
+        alpha = int(40 + 30 * math.sin((x / spacing) + phase))
+        pygame.draw.line(overlay, (*accent_color, alpha), start, end, 2)
+
+    pulse = 0.5 + 0.5 * math.sin(phase * 1.5)
+    glow_centers = [
+        (width * 0.25, height * 0.3),
+        (width * 0.75, height * 0.7)
+    ]
+    for cx, cy in glow_centers:
+        radius = int(170 + 40 * pulse)
+        glow_surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        for r in range(radius, 0, -12):
+            alpha = int(60 * (r / radius) ** 2)
+            pygame.draw.circle(glow_surface, (*accent_color, alpha), (radius, radius), r)
+        surface.blit(glow_surface, (int(cx - radius), int(cy - radius)), special_flags=pygame.BLEND_ADD)
+
+    surface.blit(overlay, (0, 0), special_flags=pygame.BLEND_ADD)
 
 
 class Particle:
@@ -108,11 +227,11 @@ class ParticleSystem:
     def __init__(self):
         self.particles = []
         self.effects = {
-            "line_clear": {"count": 50, "colors": [(255, 255, 200), (255, 200, 100), (255, 150, 50)]},
-            "shape_place": {"count": 25, "colors": [(100, 200, 255), (50, 150, 255), (0, 100, 200)]},
-            "combo": {"count": 80, "colors": [(255, 50, 50), (255, 100, 100), (255, 150, 150)]},
-            "code_success": {"count": 100, "colors": [(50, 255, 100), (100, 255, 150), (150, 255, 200)]},
-            "game_over": {"count": 150, "colors": [(255, 50, 50), (255, 100, 100), (200, 50, 50)]}
+            "line_clear": {"count": 50, "colors": [(0, 210, 255), (0, 170, 255), (80, 200, 255)]},
+            "shape_place": {"count": 25, "colors": [(0, 190, 255), (0, 150, 255), (40, 120, 255)]},
+            "combo": {"count": 80, "colors": [(0, 200, 255), (80, 180, 255), (160, 220, 255)]},
+            "code_success": {"count": 100, "colors": [(0, 230, 255), (60, 210, 255), (140, 230, 255)]},
+            "game_over": {"count": 150, "colors": [(0, 120, 255), (0, 80, 200), (0, 40, 140)]}
         }
 
     def add_effect(self, effect_type, x, y, color=None):
@@ -661,8 +780,14 @@ class CodeBattle:
 
         # Основное окно
         battle_rect = pygame.Rect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100)
-        pygame.draw.rect(surface, CODE_EDITOR_BG, battle_rect, border_radius=15)
-        pygame.draw.rect(surface, HIGHLIGHT_COLOR, battle_rect, 3, border_radius=15)
+        draw_neon_panel(
+            surface,
+            battle_rect,
+            border_radius=28,
+            top_color=lighten_color(CODE_EDITOR_BG, 0.4),
+            bottom_color=darken_color(CODE_EDITOR_BG, 0.05),
+            glow_color=NEON_SECONDARY
+        )
 
         # Заголовок
         title_font = pygame.font.SysFont('consolas', 32, bold=True)
@@ -674,20 +799,31 @@ class CodeBattle:
         name_text = challenge_font.render(f"Задача: {self.current_challenge['name']}", True, TEXT_COLOR)
         desc_text = self.code_font.render(self.current_challenge['description'], True, TEXT_COLOR)
 
-        surface.blit(name_text, (120, 120))
-        surface.blit(desc_text, (120, 150))
+        surface.blit(name_text, (battle_rect.x + 30, battle_rect.y + 70))
+        surface.blit(desc_text, (battle_rect.x + 30, battle_rect.y + 100))
 
         # Таймер и награда
         time_text = challenge_font.render(f"Время: {int(self.time_left)} сек", True, TEXT_COLOR)
         reward_text = challenge_font.render(f"Награда: {self.current_challenge['reward']} очков", True, CORRECT_COLOR)
 
-        surface.blit(time_text, (SCREEN_WIDTH - 300, 120))
-        surface.blit(reward_text, (SCREEN_WIDTH - 300, 150))
+        surface.blit(time_text, (battle_rect.right - 260, battle_rect.y + 70))
+        surface.blit(reward_text, (battle_rect.right - 260, battle_rect.y + 100))
 
         # Редактор кода
         code_rect = pygame.Rect(120, 200, SCREEN_WIDTH - 240, 300)
-        pygame.draw.rect(surface, (20, 25, 35), code_rect, border_radius=10)
-        pygame.draw.rect(surface, GRID_HIGHLIGHT, code_rect, 2, border_radius=10)
+        code_surface = pygame.Surface(code_rect.size, pygame.SRCALPHA)
+        code_surface.blit(
+            get_vertical_gradient(code_rect.size,
+                                   lighten_color(CODE_EDITOR_BG, 0.3),
+                                   darken_color(CODE_EDITOR_BG, 0.1)),
+            (0, 0)
+        )
+        pygame.draw.rect(code_surface, (*NEON_ACCENT, 140), code_surface.get_rect(), 2, border_radius=16)
+        inner_code_rect = code_surface.get_rect().inflate(-10, -10)
+        if inner_code_rect.width > 0 and inner_code_rect.height > 0:
+            pygame.draw.rect(code_surface, (*NEON_SECONDARY, 40), inner_code_rect, border_radius=12)
+        draw_glow(surface, code_rect, NEON_SECONDARY, spread=12, max_alpha=70, border_radius=20)
+        surface.blit(code_surface, code_rect.topleft)
 
         # Отображение кода с подсветкой синтаксиса
         lines = self.player_code.split('\n')
@@ -728,38 +864,60 @@ class CodeBattle:
 
         # Автодополнение
         if self.show_autocomplete and self.autocomplete_options:
-            autocomplete_rect = pygame.Rect(160, 210 + self.line_height, 200,
+            autocomplete_rect = pygame.Rect(160, 210 + self.line_height, 240,
                                             len(self.autocomplete_options) * self.line_height)
-            pygame.draw.rect(surface, (40, 45, 60), autocomplete_rect)
-            pygame.draw.rect(surface, GRID_HIGHLIGHT, autocomplete_rect, 1)
+            auto_surface = pygame.Surface(autocomplete_rect.size, pygame.SRCALPHA)
+            auto_surface.blit(
+                get_vertical_gradient(autocomplete_rect.size,
+                                       lighten_color(CODE_EDITOR_BG, 0.25),
+                                       darken_color(CODE_EDITOR_BG, 0.1)),
+                (0, 0)
+            )
+            pygame.draw.rect(auto_surface, (*NEON_ACCENT, 160), auto_surface.get_rect(), 2, border_radius=10)
+            surface.blit(auto_surface, autocomplete_rect.topleft)
 
             for i, option in enumerate(self.autocomplete_options):
                 color = HIGHLIGHT_COLOR if i == self.autocomplete_index else TEXT_COLOR
                 option_text = self.code_font.render(option, True, color)
-                surface.blit(option_text, (165, 215 + self.line_height + i * self.line_height))
+                surface.blit(option_text, (
+                    autocomplete_rect.x + 12,
+                    autocomplete_rect.y + 6 + i * self.line_height
+                ))
 
         # Подсказки
         if "hints" in self.current_challenge:
             hint_rect = pygame.Rect(120, 520, SCREEN_WIDTH - 240, 60)
-            pygame.draw.rect(surface, (30, 35, 45), hint_rect, border_radius=8)
-            pygame.draw.rect(surface, GRID_HIGHLIGHT, hint_rect, 1, border_radius=8)
+            hint_surface = pygame.Surface(hint_rect.size, pygame.SRCALPHA)
+            hint_surface.blit(
+                get_vertical_gradient(hint_rect.size,
+                                       lighten_color(CODE_EDITOR_BG, 0.25),
+                                       darken_color(CODE_EDITOR_BG, 0.05)),
+                (0, 0)
+            )
+            pygame.draw.rect(hint_surface, (*NEON_SECONDARY, 140), hint_surface.get_rect(), 2, border_radius=12)
+            surface.blit(hint_surface, hint_rect.topleft)
 
             hint_text = self.code_font.render(
                 f"Подсказка: {self.current_challenge['hints'][self.current_hint]}",
                 True, TEXT_COLOR
             )
-            surface.blit(hint_text, (130, 540))
+            surface.blit(hint_text, (hint_rect.x + 12, hint_rect.y + 12))
 
             hint_nav = self.code_font.render(
                 f"({self.current_hint + 1}/{len(self.current_challenge['hints'])}) Нажмите H для следующей подсказки",
                 True, CODE_LINE_NUMBERS
             )
-            surface.blit(hint_nav, (130, 565))
+            surface.blit(hint_nav, (hint_rect.x + 12, hint_rect.y + 32))
 
         # Кнопка отправки
-        self.submit_button_rect = pygame.Rect(SCREEN_WIDTH - 320, 520, 200, 40)
-        pygame.draw.rect(surface, BUTTON_COLOR, self.submit_button_rect, border_radius=8)
-        pygame.draw.rect(surface, HIGHLIGHT_COLOR, self.submit_button_rect, 2, border_radius=8)
+        self.submit_button_rect = pygame.Rect(SCREEN_WIDTH - 320, 520, 220, 46)
+        draw_neon_panel(
+            surface,
+            self.submit_button_rect,
+            border_radius=14,
+            top_color=lighten_color(BUTTON_COLOR, 0.3),
+            bottom_color=darken_color(BUTTON_COLOR, 0.2)
+        )
 
         submit_text = self.code_font.render("Отправить (Ctrl+Enter)", True, TEXT_COLOR)
         surface.blit(submit_text, (self.submit_button_rect.centerx - submit_text.get_width() // 2,
@@ -767,10 +925,16 @@ class CodeBattle:
 
         # Результат
         if self.result:
-            result_rect = pygame.Rect(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 - 50, 400, 100)
+            result_rect = pygame.Rect(SCREEN_WIDTH // 2 - 220, SCREEN_HEIGHT // 2 - 60, 440, 120)
             color = CORRECT_COLOR if self.result["success"] else WRONG_COLOR
-            pygame.draw.rect(surface, PANEL_BG, result_rect, border_radius=10)
-            pygame.draw.rect(surface, color, result_rect, 3, border_radius=10)
+            draw_neon_panel(
+                surface,
+                result_rect,
+                border_radius=18,
+                top_color=lighten_color(PANEL_BG, 0.3),
+                bottom_color=darken_color(PANEL_BG, 0.1),
+                glow_color=color
+            )
 
             result_font = pygame.font.SysFont('consolas', 24, bold=True)
             result_text = result_font.render(
@@ -802,10 +966,11 @@ class CodeBattle:
 
             for i, instruction in enumerate(instructions):
                 text = instruct_font.render(instruction, True, TEXT_COLOR)
-                surface.blit(text, (120, SCREEN_HEIGHT - 100 + i * 20))
+                surface.blit(text, (battle_rect.x + 30, battle_rect.bottom - 120 + i * 20))
         else:
             instruct_text = instruct_font.render("Нажмите любую клавишу чтобы продолжить", True, TEXT_COLOR)
-            surface.blit(instruct_text, (SCREEN_WIDTH // 2 - instruct_text.get_width() // 2, SCREEN_HEIGHT - 70))
+            surface.blit(instruct_text, (battle_rect.centerx - instruct_text.get_width() // 2,
+                                         battle_rect.bottom - 80))
 
     def get_cursor_position(self):
         """Возвращает позицию курсора (строка, столбец)"""
@@ -943,14 +1108,28 @@ class Shape:
 
     def _create_surface(self, cell_size: int) -> pygame.Surface:
         surf = pygame.Surface((self.width * cell_size, self.height * cell_size), pygame.SRCALPHA)
+        border_radius = max(2, min(10, cell_size // 2))
         for bx, by in self.blocks:
-            rect = pygame.Rect(bx * cell_size, by * cell_size, cell_size - 2, cell_size - 2)
-            pygame.draw.rect(surf, self.color, rect)
-            pygame.draw.rect(surf, HIGHLIGHT_COLOR, rect, 2)
+            block_surface = pygame.Surface((cell_size - 2, cell_size - 2), pygame.SRCALPHA)
+            top_color = lighten_color(self.color, 0.35)
+            bottom_color = darken_color(self.color, 0.25)
+            block_surface.blit(
+                get_vertical_gradient((cell_size - 2, cell_size - 2), top_color, bottom_color),
+                (0, 0)
+            )
+            pygame.draw.rect(
+                block_surface,
+                (*HIGHLIGHT_COLOR, 130),
+                block_surface.get_rect(),
+                2,
+                border_radius=border_radius
+            )
 
-            highlight = pygame.Surface((cell_size // 3, cell_size // 3), pygame.SRCALPHA)
-            highlight.fill((255, 255, 255, 50))
-            surf.blit(highlight, (bx * cell_size + 2, by * cell_size + 2))
+            highlight = pygame.Surface((cell_size - 6, cell_size // 3), pygame.SRCALPHA)
+            highlight.fill((*TEXT_COLOR, 25))
+            block_surface.blit(highlight, (3, 3))
+
+            surf.blit(block_surface, (bx * cell_size + 1, by * cell_size + 1))
         return surf
 
     def draw(self, surface: pygame.Surface, x: int, y: int,
@@ -1129,28 +1308,51 @@ class GameBoard:
         return True
 
     def draw(self, surface: pygame.Surface) -> None:
-        grid_bg = pygame.Rect(GRID_OFFSET_X - 10, GRID_OFFSET_Y - 10,
-                              GRID_SIZE * CELL_SIZE + 20, GRID_SIZE * CELL_SIZE + 20)
-        pygame.draw.rect(surface, PANEL_BG, grid_bg, border_radius=10)
-        pygame.draw.rect(surface, GRID_HIGHLIGHT, grid_bg, 3, border_radius=10)
+        grid_bg = pygame.Rect(
+            GRID_OFFSET_X - 16,
+            GRID_OFFSET_Y - 16,
+            GRID_SIZE * CELL_SIZE + 32,
+            GRID_SIZE * CELL_SIZE + 32
+        )
+        draw_neon_panel(
+            surface,
+            grid_bg,
+            border_radius=18,
+            top_color=lighten_color(GRID_BACKGROUND, 0.2),
+            bottom_color=darken_color(GRID_BACKGROUND, 0.1),
+            glow_color=NEON_SECONDARY
+        )
+
+        inner_rect = pygame.Rect(
+            GRID_OFFSET_X,
+            GRID_OFFSET_Y,
+            GRID_SIZE * CELL_SIZE,
+            GRID_SIZE * CELL_SIZE
+        )
+        inner_surface = pygame.Surface(inner_rect.size, pygame.SRCALPHA)
+        inner_surface.fill((*GRID_BACKGROUND, 190))
+
+        grid_surface = pygame.Surface(inner_rect.size, pygame.SRCALPHA)
 
         for y in range(GRID_SIZE):
             for x in range(GRID_SIZE):
-                rect = pygame.Rect(
-                    GRID_OFFSET_X + x * CELL_SIZE,
-                    GRID_OFFSET_Y + y * CELL_SIZE,
-                    CELL_SIZE, CELL_SIZE
-                )
-                pygame.draw.rect(surface, GRID_COLOR, rect, 1)
+                rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(grid_surface, (*GRID_COLOR, 110), rect, 1)
 
                 if self.grid[y][x] != 0:
                     cell_rect = pygame.Rect(
-                        GRID_OFFSET_X + x * CELL_SIZE + 1,
-                        GRID_OFFSET_Y + y * CELL_SIZE + 1,
-                        CELL_SIZE - 2, CELL_SIZE - 2
+                        x * CELL_SIZE + 1,
+                        y * CELL_SIZE + 1,
+                        CELL_SIZE - 2,
+                        CELL_SIZE - 2
                     )
-                    pygame.draw.rect(surface, self.colors[y][x], cell_rect, border_radius=4)
-                    pygame.draw.rect(surface, HIGHLIGHT_COLOR, cell_rect, 2, border_radius=4)
+                    pygame.draw.rect(grid_surface, self.colors[y][x], cell_rect, border_radius=6)
+                    pygame.draw.rect(grid_surface, (*HIGHLIGHT_COLOR, 160), cell_rect, 2, border_radius=6)
+
+        pygame.draw.rect(grid_surface, (*NEON_ACCENT, 70), grid_surface.get_rect(), 2)
+
+        inner_surface.blit(grid_surface, (0, 0))
+        surface.blit(inner_surface, inner_rect.topleft)
 
 
 class QuizEngine:
@@ -1190,9 +1392,23 @@ class Button:
         self.font = pygame.font.SysFont('consolas', font_size)
 
     def draw(self, surface):
-        color = BUTTON_HOVER_COLOR if self.is_hovered else BUTTON_COLOR
-        pygame.draw.rect(surface, color, self.rect, border_radius=8)
-        pygame.draw.rect(surface, HIGHLIGHT_COLOR, self.rect, 2, border_radius=8)
+        base_color = BUTTON_HOVER_COLOR if self.is_hovered else BUTTON_COLOR
+        top_color = lighten_color(base_color, 0.3)
+        bottom_color = darken_color(base_color, 0.2)
+
+        button_surface = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+        button_surface.blit(
+            get_vertical_gradient(self.rect.size, top_color, bottom_color),
+            (0, 0)
+        )
+        pygame.draw.rect(button_surface, (*NEON_ACCENT, 150),
+                         button_surface.get_rect(), 2, border_radius=14)
+        inner_rect = button_surface.get_rect().inflate(-8, -8)
+        if inner_rect.width > 0 and inner_rect.height > 0:
+            pygame.draw.rect(button_surface, (*NEON_ACCENT, 40), inner_rect, border_radius=10)
+
+        draw_glow(surface, self.rect, NEON_ACCENT, spread=18, max_alpha=80, border_radius=18)
+        surface.blit(button_surface, self.rect.topleft)
 
         text_surf = self.font.render(self.text, True, TEXT_COLOR)
         text_rect = text_surf.get_rect(center=self.rect.center)
@@ -1260,7 +1476,7 @@ class MainMenu:
         return None
 
     def draw(self):
-        self.screen.fill(MENU_BG)
+        draw_dynamic_background(self.screen, MENU_BACKGROUND_TOP, MENU_BACKGROUND_BOTTOM, NEON_ACCENT)
 
         if self.current_screen == "main":
             self.draw_main_menu()
@@ -1268,25 +1484,53 @@ class MainMenu:
             self.draw_achievements()
 
     def draw_main_menu(self):
-        title = self.title_font.render("Python Blaster", True, HIGHLIGHT_COLOR)
-        subtitle = self.font.render("Code & Clear", True, TEXT_COLOR)
+        card_rect = pygame.Rect(SCREEN_WIDTH // 2 - 260, 140, 520, 360)
+        draw_neon_panel(
+            self.screen,
+            card_rect,
+            border_radius=24,
+            top_color=lighten_color(PANEL_BG, 0.35),
+            bottom_color=darken_color(PANEL_BG, 0.1)
+        )
 
-        self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 150))
-        self.screen.blit(subtitle, (SCREEN_WIDTH // 2 - subtitle.get_width() // 2, 210))
+        title = self.title_font.render("Python Blaster", True, TEXT_COLOR)
+        subtitle = self.font.render("Code & Clear", True, NEON_ACCENT)
+
+        self.screen.blit(title, (card_rect.centerx - title.get_width() // 2, 170))
+        self.screen.blit(subtitle, (card_rect.centerx - subtitle.get_width() // 2, 215))
 
         high_score = self.small_font.render(f"Рекорд: {self.game_data.data['high_score']}", True, TEXT_COLOR)
-        self.screen.blit(high_score, (SCREEN_WIDTH // 2 - high_score.get_width() // 2, 250))
+        self.screen.blit(high_score, (card_rect.centerx - high_score.get_width() // 2, 250))
 
         self.start_button.draw(self.screen)
         self.achievements_button.draw(self.screen)
         self.quit_button.draw(self.screen)
 
-        instruction = self.small_font.render("Нажмите ESC для выхода", True, TEXT_COLOR)
-        self.screen.blit(instruction, (SCREEN_WIDTH // 2 - instruction.get_width() // 2, 550))
+        instruction = self.small_font.render("Нажмите ESC для выхода", True, CODE_LINE_NUMBERS)
+        self.screen.blit(instruction, (card_rect.centerx - instruction.get_width() // 2, 480))
 
     def draw_achievements(self):
-        title = self.title_font.render("Достижения", True, HIGHLIGHT_COLOR)
-        self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 50))
+        title_rect = pygame.Rect(SCREEN_WIDTH // 2 - 260, 60, 520, 80)
+        draw_neon_panel(
+            self.screen,
+            title_rect,
+            border_radius=22,
+            top_color=lighten_color(PANEL_BG, 0.3),
+            bottom_color=darken_color(PANEL_BG, 0.1)
+        )
+
+        title = self.title_font.render("Достижения", True, TEXT_COLOR)
+        self.screen.blit(title, (title_rect.centerx - title.get_width() // 2,
+                                 title_rect.centery - title.get_height() // 2))
+
+        stats_rect = pygame.Rect(SCREEN_WIDTH // 2 - 500, 160, 1000, 160)
+        draw_neon_panel(
+            self.screen,
+            stats_rect,
+            border_radius=20,
+            top_color=lighten_color(PANEL_BG, 0.25),
+            bottom_color=darken_color(PANEL_BG, 0.1)
+        )
 
         stats = [
             f"Сыграно игр: {self.game_data.data['games_played']}",
@@ -1298,11 +1542,27 @@ class MainMenu:
         ]
 
         for i, stat in enumerate(stats):
-            text = self.font.render(stat, True, TEXT_COLOR)
-            self.screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, 120 + i * 40))
+            text = self.small_font.render(stat, True, TEXT_COLOR)
+            row = i // 3
+            col = i % 3
+            x = stats_rect.x + 40 + col * (stats_rect.width // 3)
+            y = stats_rect.y + 20 + row * 40
+            self.screen.blit(text, (x, y))
 
-        achievements_title = self.font.render("Полученные достижения:", True, HIGHLIGHT_COLOR)
-        self.screen.blit(achievements_title, (SCREEN_WIDTH // 2 - achievements_title.get_width() // 2, 350))
+        achievements_panel = pygame.Rect(SCREEN_WIDTH // 2 - 500, 340, 1000, 260)
+        draw_neon_panel(
+            self.screen,
+            achievements_panel,
+            border_radius=20,
+            top_color=lighten_color(PANEL_BG, 0.25),
+            bottom_color=darken_color(PANEL_BG, 0.1),
+            glow_color=NEON_SECONDARY
+        )
+
+        achievements_title = self.font.render("Полученные достижения:", True, NEON_ACCENT)
+        self.screen.blit(achievements_title,
+                         (achievements_panel.centerx - achievements_title.get_width() // 2,
+                          achievements_panel.y + 15))
 
         achievements = self.game_data.data["achievements"]
         achievement_texts = [
@@ -1319,14 +1579,17 @@ class MainMenu:
         ]
 
         for i, achievement in enumerate(achievement_texts):
-            color = CORRECT_COLOR if "❓" not in achievement else (100, 100, 100)
+            color = CORRECT_COLOR if "❓" not in achievement else CODE_LINE_NUMBERS
             text = self.small_font.render(achievement, True, color)
-            x_pos = SCREEN_WIDTH // 2 - 150 + (i % 2) * 300
-            y_pos = 400 + (i // 2) * 30
-            self.screen.blit(text, (x_pos, y_pos))
+            col = i % 2
+            row = i // 2
+            x = achievements_panel.x + 40 + col * (achievements_panel.width // 2)
+            y = achievements_panel.y + 60 + row * 32
+            self.screen.blit(text, (x, y))
 
-        instruction = self.small_font.render("Нажмите для возврата", True, TEXT_COLOR)
-        self.screen.blit(instruction, (SCREEN_WIDTH // 2 - instruction.get_width() // 2, 550))
+        instruction = self.small_font.render("Нажмите для возврата", True, CODE_LINE_NUMBERS)
+        self.screen.blit(instruction, (achievements_panel.centerx - instruction.get_width() // 2,
+                                       achievements_panel.bottom - 40))
 
 
 class Game:
@@ -1527,9 +1790,9 @@ class Game:
     def get_shape_panel_position(self, index: int, shape: Shape) -> Tuple[int, int]:
         """Вычисляет позицию фигуры в панели для центрированного расположения"""
         panel_x = self.panel_rect.x
-        panel_y = self.panel_rect.y
+        panel_y = self.panel_rect.y + 60
         panel_width = self.panel_rect.width
-        panel_height = self.panel_rect.height
+        panel_height = self.panel_rect.height - 80
 
         # Располагаем фигуры вертикально с равными отступами
         slot_height = panel_height // 3
@@ -1596,13 +1859,22 @@ class Game:
         self.particle_system.particles.clear()
 
     def draw(self) -> None:
-        self.screen.fill(BACKGROUND)
+        draw_dynamic_background(self.screen, BACKGROUND_TOP, BACKGROUND_BOTTOM, NEON_ACCENT)
 
         # Сначала обновляем частицы
         self.particle_system.update()
 
+        title_rect = pygame.Rect(SCREEN_WIDTH // 2 - 260, 18, 520, 64)
+        draw_neon_panel(
+            self.screen,
+            title_rect,
+            border_radius=24,
+            top_color=lighten_color(PANEL_BG, 0.35),
+            bottom_color=darken_color(PANEL_BG, 0.15)
+        )
         title = self.title_font.render("Python Blaster: Code & Clear", True, TEXT_COLOR)
-        self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 20))
+        self.screen.blit(title, (title_rect.centerx - title.get_width() // 2,
+                                 title_rect.centery - title.get_height() // 2))
 
         self.board.draw(self.screen)
 
@@ -1616,11 +1888,17 @@ class Game:
             )
 
         # Рисуем панель фигур
-        pygame.draw.rect(self.screen, PANEL_BG, self.panel_rect, border_radius=10)
-        pygame.draw.rect(self.screen, GRID_HIGHLIGHT, self.panel_rect, 2, border_radius=10)
+        draw_neon_panel(
+            self.screen,
+            self.panel_rect,
+            border_radius=16,
+            top_color=lighten_color(PANEL_BG, 0.25),
+            bottom_color=darken_color(PANEL_BG, 0.1),
+            glow_color=NEON_SECONDARY
+        )
 
-        panel_title = self.font.render("Доступные фигуры:", True, TEXT_COLOR)
-        self.screen.blit(panel_title, (self.panel_rect.x + 10, 120))
+        panel_title = self.font.render("Доступные фигуры:", True, NEON_ACCENT)
+        self.screen.blit(panel_title, (self.panel_rect.x + 20, self.panel_rect.y + 20))
 
         # Рисуем фигуры в панели с центрированием
         for i, shape in enumerate(self.current_shapes):
@@ -1646,24 +1924,35 @@ class Game:
 
         # Уменьшенная панель счета
         score_panel = pygame.Rect(SCREEN_WIDTH - 280, 120, 250, 120)
-        pygame.draw.rect(self.screen, PANEL_BG, score_panel, border_radius=10)
-        pygame.draw.rect(self.screen, GRID_HIGHLIGHT, score_panel, 2, border_radius=10)
+        draw_neon_panel(
+            self.screen,
+            score_panel,
+            border_radius=14,
+            top_color=lighten_color(PANEL_BG, 0.3),
+            bottom_color=darken_color(PANEL_BG, 0.05)
+        )
 
-        score_text = self.font.render(f"Счет: {self.board.score}", True, TEXT_COLOR)
+        score_text = self.font.render(f"Счет: {self.board.score}", True, NEON_ACCENT)
         lines_text = self.font.render(f"Линии: {self.board.lines_cleared}", True, TEXT_COLOR)
         next_event = max(0, self.last_event_lines + self.code_battle_interval - self.board.lines_cleared)
-        next_event_text = self.small_font.render(f"След. событие: {next_event}", True, TEXT_COLOR)
-        difficulty_text = self.small_font.render(f"Сложность: {self.difficulty}", True, TEXT_COLOR)
+        next_event_text = self.small_font.render(f"След. событие: {next_event}", True, CODE_LINE_NUMBERS)
+        difficulty_text = self.small_font.render(f"Сложность: {self.difficulty}", True, CODE_LINE_NUMBERS)
 
-        self.screen.blit(score_text, (SCREEN_WIDTH - 260, 140))
-        self.screen.blit(lines_text, (SCREEN_WIDTH - 260, 170))
-        self.screen.blit(next_event_text, (SCREEN_WIDTH - 260, 200))
-        self.screen.blit(difficulty_text, (SCREEN_WIDTH - 260, 220))
+        self.screen.blit(score_text, (score_panel.x + 20, score_panel.y + 20))
+        self.screen.blit(lines_text, (score_panel.x + 20, score_panel.y + 52))
+        self.screen.blit(next_event_text, (score_panel.x + 20, score_panel.y + 82))
+        self.screen.blit(difficulty_text, (score_panel.x + 20, score_panel.y + 108))
 
         # Уменьшенная панель инструкций
         instructions_panel = pygame.Rect(SCREEN_WIDTH - 280, 260, 250, 180)
-        pygame.draw.rect(self.screen, PANEL_BG, instructions_panel, border_radius=10)
-        pygame.draw.rect(self.screen, GRID_HIGHLIGHT, instructions_panel, 2, border_radius=10)
+        draw_neon_panel(
+            self.screen,
+            instructions_panel,
+            border_radius=14,
+            top_color=lighten_color(PANEL_BG, 0.2),
+            bottom_color=darken_color(PANEL_BG, 0.1),
+            glow_color=NEON_SECONDARY
+        )
 
         instructions = [
             "Управление:",
@@ -1674,8 +1963,11 @@ class Game:
             "Фигура 'примагнитится'"
         ]
         for i, line in enumerate(instructions):
-            text = self.small_font.render(line, True, TEXT_COLOR)
-            self.screen.blit(text, (SCREEN_WIDTH - 260, 280 + i * 25))
+            color = NEON_ACCENT if i == 0 else TEXT_COLOR
+            if not line:
+                color = CODE_LINE_NUMBERS
+            text = self.small_font.render(line, True, color)
+            self.screen.blit(text, (instructions_panel.x + 20, instructions_panel.y + 20 + i * 25))
 
         # ТЕПЕРЬ ЧАСТИЦЫ РИСУЮТСЯ ПОСЛЕ ВСЕГО ОСТАЛЬНОГО
         self.particle_system.draw(self.screen)
@@ -1701,10 +1993,15 @@ class Game:
         self.screen.blit(overlay, (0, 0))
 
         quiz_rect = pygame.Rect(200, 150, 1000, 400)
-        pygame.draw.rect(self.screen, PANEL_BG, quiz_rect, border_radius=15)
-        pygame.draw.rect(self.screen, HIGHLIGHT_COLOR, quiz_rect, 3, border_radius=15)
+        draw_neon_panel(
+            self.screen,
+            quiz_rect,
+            border_radius=24,
+            top_color=lighten_color(PANEL_BG, 0.3),
+            bottom_color=darken_color(PANEL_BG, 0.1)
+        )
 
-        question_text = self.font.render("Вопрос по Python:", True, TEXT_COLOR)
+        question_text = self.font.render("Вопрос по Python:", True, NEON_ACCENT)
         self.screen.blit(question_text, (SCREEN_WIDTH // 2 - question_text.get_width() // 2, 180))
 
         question_lines = self.wrap_text(self.current_question["question"], 740)
@@ -1717,7 +2014,7 @@ class Game:
             option_text = self.small_font.render(f"{i + 1}. {option}", True, TEXT_COLOR)
             self.screen.blit(option_text, (SCREEN_WIDTH // 2 - option_text.get_width() // 2, y_offset + i * 30))
 
-        instruct_text = self.small_font.render("Нажмите 1-4 для выбора ответа", True, TEXT_COLOR)
+        instruct_text = self.small_font.render("Нажмите 1-4 для выбора ответа", True, CODE_LINE_NUMBERS)
         self.screen.blit(instruct_text, (SCREEN_WIDTH // 2 - instruct_text.get_width() // 2, y_offset + 150))
 
     def draw_quiz_result(self) -> None:
@@ -1726,8 +2023,14 @@ class Game:
         self.screen.blit(overlay, (0, 0))
 
         result_rect = pygame.Rect(300, 200, 800, 300)
-        pygame.draw.rect(self.screen, PANEL_BG, result_rect, border_radius=15)
-        pygame.draw.rect(self.screen, self.quiz_result["color"], result_rect, 3, border_radius=15)
+        draw_neon_panel(
+            self.screen,
+            result_rect,
+            border_radius=24,
+            top_color=lighten_color(PANEL_BG, 0.3),
+            bottom_color=darken_color(PANEL_BG, 0.1),
+            glow_color=self.quiz_result["color"]
+        )
 
         result_text = self.title_font.render(self.quiz_result["message"], True, self.quiz_result["color"])
         self.screen.blit(result_text, (SCREEN_WIDTH // 2 - result_text.get_width() // 2, 250))
@@ -1738,7 +2041,7 @@ class Game:
                 text = self.small_font.render(line, True, TEXT_COLOR)
                 self.screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, 320 + i * 25))
 
-        instruct_text = self.small_font.render("Нажмите любую клавишу чтобы продолжить", True, TEXT_COLOR)
+        instruct_text = self.small_font.render("Нажмите любую клавишу чтобы продолжить", True, CODE_LINE_NUMBERS)
         self.screen.blit(instruct_text, (SCREEN_WIDTH // 2 - instruct_text.get_width() // 2, 450))
 
     def draw_game_over(self) -> None:
@@ -1747,10 +2050,16 @@ class Game:
         self.screen.blit(overlay, (0, 0))
 
         game_over_panel = pygame.Rect(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 - 150, 400, 300)
-        pygame.draw.rect(self.screen, PANEL_BG, game_over_panel, border_radius=15)
-        pygame.draw.rect(self.screen, (231, 76, 60), game_over_panel, 3, border_radius=15)
+        draw_neon_panel(
+            self.screen,
+            game_over_panel,
+            border_radius=22,
+            top_color=lighten_color(PANEL_BG, 0.3),
+            bottom_color=darken_color(PANEL_BG, 0.1),
+            glow_color=NEON_ACCENT
+        )
 
-        game_over_text = self.title_font.render("ИГРА ОКОНЧЕНА", True, (231, 76, 60))
+        game_over_text = self.title_font.render("ИГРА ОКОНЧЕНА", True, NEON_ACCENT)
         score_text = self.font.render(f"Финальный счет: {self.board.score}", True, TEXT_COLOR)
         lines_text = self.font.render(f"Очищено линий: {self.board.lines_cleared}", True, TEXT_COLOR)
         high_score_text = self.font.render(f"Рекорд: {self.game_data.data['high_score']}", True, TEXT_COLOR)
@@ -1767,7 +2076,7 @@ class Game:
         center_y = SCREEN_HEIGHT // 2
         self.particle_system.add_effect("game_over", center_x, center_y)
 
-        restart_text = self.small_font.render("Нажмите R или SPACE для возврата в меню", True, TEXT_COLOR)
+        restart_text = self.small_font.render("Нажмите R или SPACE для возврата в меню", True, CODE_LINE_NUMBERS)
         self.screen.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 70))
 
     def wrap_text(self, text: str, max_width: int) -> List[str]:
