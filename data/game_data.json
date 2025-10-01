@@ -1,0 +1,69 @@
+{
+  "high_score": 2050,
+  "achievements": {
+    "first_game": true,
+    "score_500": true,
+    "score_1000": true,
+    "score_2000": true,
+    "clear_10_lines": true,
+    "clear_25_lines": false,
+    "answer_5_questions": true,
+    "answer_10_questions": false,
+    "complete_5_code_battles": false,
+    "complete_10_code_battles": false
+  },
+  "games_played": 6,
+  "total_lines_cleared": 71,
+  "total_questions_answered": 9,
+  "total_correct_answers": 7,
+  "total_code_battles_completed": 0,
+  "last_played": "2025-10-01T21:43:54.849637",
+  "game_sessions": [
+    {
+      "date": "2025-09-30T19:15:27.279874",
+      "score": 600,
+      "lines_cleared": 5,
+      "questions_answered": 1,
+      "correct_answers": 0
+    },
+    {
+      "date": "2025-09-30T19:35:49.451357",
+      "score": 1100,
+      "lines_cleared": 9,
+      "questions_answered": 1,
+      "correct_answers": 1
+    },
+    {
+      "date": "2025-10-01T21:02:48.875266",
+      "score": 2050,
+      "lines_cleared": 17,
+      "questions_answered": 2,
+      "correct_answers": 2,
+      "code_battles_completed": 0
+    },
+    {
+      "date": "2025-10-01T21:12:49.133995",
+      "score": 1900,
+      "lines_cleared": 16,
+      "questions_answered": 3,
+      "correct_answers": 3,
+      "code_battles_completed": 0
+    },
+    {
+      "date": "2025-10-01T21:30:36.278440",
+      "score": 900,
+      "lines_cleared": 8,
+      "questions_answered": 1,
+      "correct_answers": 1,
+      "code_battles_completed": 0
+    },
+    {
+      "date": "2025-10-01T21:43:54.849591",
+      "score": 1650,
+      "lines_cleared": 16,
+      "questions_answered": 1,
+      "correct_answers": 0,
+      "code_battles_completed": 0
+    }
+  ]
+}

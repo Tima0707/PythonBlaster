@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.so
+.env
+.venv/
+venv/
+env/
+.DS_Store
+*.egg-info/
+dist/
+build/
+.coverage
+.pytest_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+data/game_data.json
