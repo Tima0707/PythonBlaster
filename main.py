@@ -25,39 +25,39 @@ GRID_OFFSET_Y = 100
 PANEL_CELL_SIZE = 35
 FPS = 60
 
-# Цвета — неоновая палитра
-BACKGROUND_TOP = (3, 10, 26)
-BACKGROUND_BOTTOM = (10, 28, 60)
-MENU_BACKGROUND_TOP = (5, 16, 32)
-MENU_BACKGROUND_BOTTOM = (4, 10, 24)
-NEON_ACCENT = (0, 220, 255)
-NEON_SECONDARY = (0, 145, 255)
-GRID_COLOR = (25, 60, 120)
-GRID_HIGHLIGHT = (0, 175, 255)
-GRID_BACKGROUND = (14, 26, 58)
+# Цвета — спокойная синяя палитра с лёгкими неоновыми акцентами
+BACKGROUND_TOP = (10, 18, 32)
+BACKGROUND_BOTTOM = (8, 24, 46)
+MENU_BACKGROUND_TOP = (12, 24, 40)
+MENU_BACKGROUND_BOTTOM = (9, 20, 34)
+NEON_ACCENT = (70, 160, 240)
+NEON_SECONDARY = (58, 132, 210)
+GRID_COLOR = (40, 72, 110)
+GRID_HIGHLIGHT = (90, 170, 240)
+GRID_BACKGROUND = (18, 30, 52)
 CELL_COLORS = [
-    (0, 136, 255),
-    (0, 166, 255),
-    (0, 110, 220),
-    (32, 120, 255),
-    (70, 160, 255),
-    (16, 90, 200),
-    (40, 140, 255),
+    (42, 92, 150),
+    (48, 110, 170),
+    (34, 86, 140),
+    (52, 102, 160),
+    (60, 120, 178),
+    (46, 96, 150),
+    (54, 108, 168),
 ]
-TEXT_COLOR = (230, 240, 255)
+TEXT_COLOR = (222, 230, 242)
 HIGHLIGHT_COLOR = NEON_ACCENT
 VALID_PLACEMENT_COLOR = NEON_ACCENT
-INVALID_PLACEMENT_COLOR = (120, 0, 255)
-GHOST_ALPHA = 150
-PANEL_BG = (18, 32, 68)
-BUTTON_COLOR = (20, 90, 210)
-BUTTON_HOVER_COLOR = (30, 130, 255)
+INVALID_PLACEMENT_COLOR = (130, 70, 200)
+GHOST_ALPHA = 135
+PANEL_BG = (20, 32, 54)
+BUTTON_COLOR = (32, 80, 140)
+BUTTON_HOVER_COLOR = (44, 110, 170)
 CORRECT_COLOR = NEON_ACCENT
-WRONG_COLOR = (120, 40, 220)
+WRONG_COLOR = (140, 90, 200)
 MENU_BG = MENU_BACKGROUND_BOTTOM
-CODE_EDITOR_BG = (12, 24, 52)
-CODE_EDITOR_TEXT = (220, 230, 250)
-CODE_LINE_NUMBERS = (90, 120, 170)
+CODE_EDITOR_BG = (16, 28, 48)
+CODE_EDITOR_TEXT = (220, 228, 240)
+CODE_LINE_NUMBERS = (110, 134, 168)
 
 
 def lighten_color(color: Tuple[int, int, int], factor: float) -> Tuple[int, int, int]:
@@ -101,19 +101,24 @@ def get_vertical_gradient(size: Tuple[int, int], top_color: Tuple[int, int, int]
 
 
 def draw_glow(surface: pygame.Surface, rect: pygame.Rect, color: Tuple[int, int, int],
-              spread: int = 14, max_alpha: int = 90, border_radius: int = 12) -> None:
-    """Рисует неоновое свечение вокруг прямоугольника."""
+              spread: int = 10, max_alpha: int = 55, border_radius: int = 12) -> None:
+    """Рисует мягкое свечение вокруг прямоугольника."""
+    if spread <= 0 or max_alpha <= 0:
+        return
+
     glow_surface = pygame.Surface((rect.width + spread * 2, rect.height + spread * 2), pygame.SRCALPHA)
     for i in range(spread, 0, -1):
         alpha = int(max_alpha * (i / spread) ** 2)
-        inflate = i * 2
+        if alpha <= 0:
+            continue
+        inflate = int(i * 1.5)
         glow_rect = pygame.Rect(spread - i, spread - i,
                                 rect.width + inflate, rect.height + inflate)
         pygame.draw.rect(
             glow_surface,
             (*color, alpha),
             glow_rect,
-            border_radius=max(0, border_radius + i // 2)
+            border_radius=max(0, border_radius + max(0, i // 3))
         )
     surface.blit(glow_surface, (rect.x - spread, rect.y - spread), special_flags=pygame.BLEND_ADD)
 
@@ -123,18 +128,18 @@ def draw_neon_panel(surface: pygame.Surface, rect: pygame.Rect, border_radius: i
                     bottom_color: Optional[Tuple[int, int, int]] = None,
                     glow_color: Tuple[int, int, int] = NEON_ACCENT) -> None:
     """Рисует панель с градиентом и неоновым свечением."""
-    draw_glow(surface, rect, glow_color, spread=16, max_alpha=80, border_radius=border_radius + 6)
+    draw_glow(surface, rect, glow_color, spread=12, max_alpha=50, border_radius=border_radius + 6)
     panel_surface = pygame.Surface(rect.size, pygame.SRCALPHA)
     top = top_color or lighten_color(PANEL_BG, 0.2)
     bottom = bottom_color or darken_color(PANEL_BG, 0.1)
     panel_surface.blit(get_vertical_gradient(rect.size, top, bottom), (0, 0))
 
-    pygame.draw.rect(panel_surface, (*glow_color, 140), panel_surface.get_rect(),
+    pygame.draw.rect(panel_surface, (*glow_color, 110), panel_surface.get_rect(),
                      2, border_radius=border_radius)
-    inner_rect = panel_surface.get_rect().inflate(-8, -8)
+    inner_rect = panel_surface.get_rect().inflate(-10, -10)
     if inner_rect.width > 0 and inner_rect.height > 0:
-        pygame.draw.rect(panel_surface, (*glow_color, 35), inner_rect,
-                         border_radius=max(0, border_radius - 4))
+        pygame.draw.rect(panel_surface, (*glow_color, 28), inner_rect,
+                         border_radius=max(0, border_radius - 5))
 
     surface.blit(panel_surface, rect.topleft)
 
@@ -142,31 +147,31 @@ def draw_neon_panel(surface: pygame.Surface, rect: pygame.Rect, border_radius: i
 def draw_dynamic_background(surface: pygame.Surface, top_color: Tuple[int, int, int],
                             bottom_color: Tuple[int, int, int],
                             accent_color: Tuple[int, int, int]) -> None:
-    """Рисует динамический фон с градиентом и неоновыми линиями."""
+    """Рисует динамический фон с мягким градиентом и деликатными световыми линиями."""
     width, height = surface.get_size()
     surface.blit(get_vertical_gradient((width, height), top_color, bottom_color), (0, 0))
 
     overlay = pygame.Surface((width, height), pygame.SRCALPHA)
     phase = pygame.time.get_ticks() / 1000.0
-    spacing = 160
-    shift = (phase * 40) % spacing
+    spacing = 200
+    shift = (phase * 25) % spacing
 
     for x in range(-height, width + spacing, spacing):
         start = (x + shift, 0)
         end = (x + height + shift, height)
-        alpha = int(40 + 30 * math.sin((x / spacing) + phase))
-        pygame.draw.line(overlay, (*accent_color, alpha), start, end, 2)
+        alpha = int(18 + 16 * math.sin((x / spacing) + phase))
+        pygame.draw.line(overlay, (*accent_color, alpha), start, end, 1)
 
-    pulse = 0.5 + 0.5 * math.sin(phase * 1.5)
+    pulse = 0.45 + 0.35 * math.sin(phase)
     glow_centers = [
         (width * 0.25, height * 0.3),
         (width * 0.75, height * 0.7)
     ]
     for cx, cy in glow_centers:
-        radius = int(170 + 40 * pulse)
+        radius = int(120 + 25 * pulse)
         glow_surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        for r in range(radius, 0, -12):
-            alpha = int(60 * (r / radius) ** 2)
+        for r in range(radius, 0, -14):
+            alpha = int(28 * (r / radius) ** 2)
             pygame.draw.circle(glow_surface, (*accent_color, alpha), (radius, radius), r)
         surface.blit(glow_surface, (int(cx - radius), int(cy - radius)), special_flags=pygame.BLEND_ADD)
 
