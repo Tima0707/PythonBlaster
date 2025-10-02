@@ -1,0 +1,106 @@
+{
+  "items": [
+    {
+      "name": "Сумма двух чисел",
+      "description": "Напишите функцию, которая возвращает сумму двух чисел",
+      "template": "def add(a, b):\n    # Напишите ваш код здесь\n    pass",
+      "test_cases": [
+        {"input": [1, 2], "expected": 3},
+        {"input": [5, 7], "expected": 12},
+        {"input": [-1, 1], "expected": 0},
+        {"input": [0, 0], "expected": 0}
+      ],
+      "difficulty": "easy",
+      "time_limit": 120,
+      "reward": 200,
+      "hints": ["Используйте оператор +", "Верните результат сложения"],
+      "solution": "def add(a, b):\n    return a + b",
+      "explanation": "Сумма вычисляется оператором +. Никаких особых случаев."
+    },
+    {
+      "name": "Факториал",
+      "description": "Верните n! (произведение 1..n), 0! = 1",
+      "template": "def factorial(n):\n    # Напишите ваш код здесь\n    pass",
+      "test_cases": [
+        {"input": [0], "expected": 1},
+        {"input": [1], "expected": 1},
+        {"input": [5], "expected": 120},
+        {"input": [7], "expected": 5040}
+      ],
+      "difficulty": "medium",
+      "time_limit": 180,
+      "reward": 350,
+      "hints": ["Итерация от 1 до n", "Начальное значение 1"],
+      "solution": "def factorial(n):\n    res = 1\n    for i in range(2, n+1):\n        res *= i\n    return res",
+      "explanation": "Итеративный вариант без рекурсии: быстрее и безопаснее по стеку."
+    },
+    {
+      "name": "Палиндром",
+      "description": "Проверьте, является ли строка палиндромом (игнорируйте пробелы и регистр)",
+      "template": "def is_palindrome(s):\n    # Напишите ваш код здесь\n    pass",
+      "test_cases": [
+        {"input": ["racecar"], "expected": true},
+        {"input": ["hello"], "expected": false},
+        {"input": ["A man a plan a canal Panama"], "expected": true},
+        {"input": [""], "expected": true}
+      ],
+      "difficulty": "medium",
+      "time_limit": 180,
+      "reward": 300,
+      "hints": ["Нормализуйте строку", "Сравните с перевёрнутой"],
+      "solution": "def is_palindrome(s):\n    s = ''.join(c.lower() for c in s if c.isalnum())\n    return s == s[::-1]",
+      "explanation": "Фильтруем не буквенно-цифровые, приводим к нижнему, сравниваем с разворотом."
+    },
+    {
+      "name": "n-е число Фибоначчи",
+      "description": "Верните n-е число Фибоначчи, F(0)=0, F(1)=1",
+      "template": "def fibonacci(n):\n    # Напишите ваш код здесь\n    pass",
+      "test_cases": [
+        {"input": [0], "expected": 0},
+        {"input": [1], "expected": 1},
+        {"input": [6], "expected": 8},
+        {"input": [10], "expected": 55}
+      ],
+      "difficulty": "hard",
+      "time_limit": 240,
+      "reward": 500,
+      "hints": ["Итерация a,b", "Обновляйте пару (a,b)"],
+      "solution": "def fibonacci(n):\n    if n < 2:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n+1):\n        a, b = b, a + b\n    return b",
+      "explanation": "Итеративно без рекурсии — линейно по времени и O(1) по памяти."
+    },
+    {
+      "name": "Является ли число простым",
+      "description": "Верните True, если n — простое число (n>=2)",
+      "template": "def is_prime(n):\n    # Напишите ваш код здесь\n    pass",
+      "test_cases": [
+        {"input": [2], "expected": true},
+        {"input": [15], "expected": false},
+        {"input": [17], "expected": true},
+        {"input": [1], "expected": false}
+      ],
+      "difficulty": "medium",
+      "time_limit": 180,
+      "reward": 350,
+      "hints": ["Проверьте делители до sqrt(n)", "Граничные случаи"],
+      "solution": "def is_prime(n):\n    if n < 2:\n        return false\n    i = 2\n    while i * i <= n:\n        if n % i == 0:\n            return false\n        i += 1\n    return true",
+      "explanation": "Достаточно проверять делители до корня из n."
+    },
+    {
+      "name": "Разворот слов",
+      "description": "Дана строка, разверните порядок слов (сохраните сами слова)",
+      "template": "def reverse_words(s):\n    # Напишите ваш код здесь\n    pass",
+      "test_cases": [
+        {"input": ["hello world"], "expected": "world hello"},
+        {"input": ["a b c"], "expected": "c b a"},
+        {"input": ["Python"], "expected": "Python"},
+        {"input": ["  ab   cd "], "expected": "cd ab"}
+      ],
+      "difficulty": "easy",
+      "time_limit": 150,
+      "reward": 250,
+      "hints": ["split/strip", "join со списком в обратном порядке"],
+      "solution": "def reverse_words(s):\n    words = s.split()\n    return ' '.join(words[::-1])",
+      "explanation": "split() сам схлопнет пробелы; остаётся развернуть список слов."
+    }
+  ]
+}
