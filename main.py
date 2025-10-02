@@ -1,3 +1,20 @@
+
+##              ||||||    ||\    /||    /====\     /======\   ========    /======\   ========
+##  |=========|   ||      || \  / ||    |    |    /|      |\      / /    /|      |\     / /
+##      ||        ||      ||  \/  ||    |====|   | |      | |    / /    | |      | |   / /
+##      ||        ||      ||      ||    |    |   | |      | |   / /     | |      | |  / /
+##      ||        ||      ||      ||             | |      | |  / /      | |      | | / /
+##      ||        ||      ||      ||              \|      |/  / /        \|      |/ / /
+##      ||      ||||||    ||      ||               \======/  /_/          \======/ /_/
+
+#  git -https://github.com/Tima0707
+#  tg  -@LEGENDA_KRUTOY
+
+
+
+
+
+
 import pygame
 import sys
 import random
@@ -986,26 +1003,112 @@ def smart_deal_shape(board, difficulty):
 class QuizEngine:
     def __init__(self):
         self.questions = []
+        self.rng = random.Random()  # можно задать seed для воспроизводимости: random.Random(42)
         self.load_questions()
 
     def load_questions(self):
+        """Загружаем вопросы и нормализуем их до 4 вариантов с валидным correct."""
         try:
             with open('data/questions.json', 'r', encoding='utf-8') as f:
-                data = json.load(f); self.questions = data.get("questions", [])
-                print(f"Загружено {len(self.questions)} вопросов")
+                data = json.load(f)
+                raw = data.get("questions", [])
         except Exception as e:
             print(f"Ошибка загрузки вопросов: {e}")
-            self.questions = [{
-                "question": "Что выведет print('Hello' + 'World')?",
-                "options": ["HelloWorld", "Hello World", "Hello+World", "Ошибка"],
-                "correct": 0,
-                "explanation": "Оператор + конкатенирует строки."
-            }]
+            raw = [
+                {
+                    "question": "Что выведет этот код: print('Hello' + 'World')?",
+                    "options": ["HelloWorld", "Hello World", "Hello+World", "Ошибка"],
+                    "correct": 0,
+                    "explanation": "В Python оператор + для строк выполняет конкатенацию."
+                }
+            ]
+
+        self.questions = []
+        for q in raw:
+            # Базовые поля
+            question = str(q.get("question", "")).strip()
+            options = list(q.get("options", []))
+            explanation = str(q.get("explanation", "")).strip()
+
+            # Если нет вариантов — делаем заглушки
+            if not options:
+                options = ["Вариант 1", "Вариант 2", "Вариант 3", "Вариант 4"]
+                correct_idx = 0
+            else:
+                # Удалим дубликаты, сохраняя порядок
+                seen = set()
+                deduped = []
+                for opt in options:
+                    if opt not in seen:
+                        seen.add(opt)
+                        deduped.append(opt)
+                options = deduped
+
+                # Определим текст правильного ответа
+                try:
+                    original_correct_idx = int(q.get("correct", 0))
+                except Exception:
+                    original_correct_idx = 0
+                original_correct_idx = max(0, min(original_correct_idx, len(options) - 1))
+                correct_text = options[original_correct_idx] if options else "Вариант 1"
+
+                # Приводим к ровно 4 вариантам (не теряя правильный)
+                if len(options) < 4:
+                    i = 1
+                    while len(options) < 4:
+                        filler = f"Вариант {i}"
+                        if filler not in options:
+                            options.append(filler)
+                        i += 1
+                elif len(options) > 4:
+                    # Сохраним правильный + случайные 3 из остальных
+                    others = [o for o in options if o != correct_text]
+                    if len(others) < 3:
+                        # если вдруг из-за дубликатов осталось мало — докинем заглушки
+                        i = 1
+                        while len(others) < 3:
+                            filler = f"Вариант {i}"
+                            if filler != correct_text and filler not in others:
+                                others.append(filler)
+                            i += 1
+                    # Выбираем 3 случайных отвлекающих
+                    picked = self.rng.sample(others, 3)
+                    options = [correct_text] + picked
+
+                # Пересчитаем корректный индекс относительно новых options (правильный всегда в списке)
+                correct_idx = options.index(correct_text)
+
+            self.questions.append({
+                "question": question,
+                "options": options,
+                "correct": correct_idx,
+                "explanation": explanation
+            })
+
+        print(f"Загружено и нормализовано вопросов: {len(self.questions)}")
 
     def get_random_question(self):
-        if not self.questions: self.load_questions()
-        return random.choice(self.questions) if self.questions else None
+        """
+        Возвращает НОВЫЙ объект вопроса:
+        - варианты случайно перемешаны
+        - индекс correct пересчитан под новую раскладку
+        """
+        if not self.questions:
+            self.load_questions()
 
+        base = self.rng.choice(self.questions)
+        # Делаем копию и мешаем только копию
+        options = list(base["options"])
+        correct_text = options[base["correct"]]
+        self.rng.shuffle(options)
+        correct_idx = options.index(correct_text)
+
+        return {
+            "question": base["question"],
+            "options": options,
+            "correct": correct_idx,
+            "explanation": base.get("explanation", "")
+        }
 
 # ---------- UI ----------
 class Button:
