@@ -1,15 +1,8 @@
-# Python Blaster: Code & Clear
-
 <div align="center">
  
-```
-\  |  /  \  |  /       \  |  /  |  /
- \ | /    \ | /         \ | / \ | /
-  \|/  T i m a 0 7 0 7  \ | /  \|/
-  /|\  ===============   /|\   /|\
- / | \    P Y T H O N   / | \ / | \
-/  |  \  B L A S T E R /  |  \  |  \
-```
+# Python Blaster: Code & Clear
+
+
 <div align="center">
 
 **Аркадная головоломка с фигурами, викториной по Python и Code-Battle редактором.**  
