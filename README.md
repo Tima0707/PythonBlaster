@@ -3,8 +3,8 @@
 <div align="center">
 
 ```
-\  |  /  \  |  /  \  |  /  \  |  /
- \ | /    \ | /    \ | /    \ | /
+\  |  /  \  |  /       \  |  /  |  /
+ \ | /    \ | /         \ | / \ | /
   \|/  T i m a 0 7 0 7  \ | /  \|/
   /|\  ===============   /|\   /|\
  / | \    P Y T H O N   / | \ / | \
@@ -27,7 +27,6 @@
 ## Оглавление
 
 - [Особенности](#особенности)
-- [Скриншоты / демо](#скриншоты--демо)
 - [Установка и запуск](#установка-и-запуск)
 - [Управление](#управление)
 - [Игровые режимы](#игровые-режимы)
@@ -40,7 +39,6 @@
 - [Архитектура (Mermaid)](#архитектура-mermaid)
 - [FAQ / Траблшутинг](#faq--траблшутинг)
 - [Roadmap](#roadmap)
-- [Лицензия](#лицензия)
 - [Благодарности](#благодарности)
 - [Приложение: готовые задачи для каталога](#приложение-готовые-задачи-для-каталога)
 
@@ -61,20 +59,6 @@
 
 ---
 
-## Скриншоты / демо
-
-> Добавь свои изображения в `docs/` и раскомментируй:
-
-<!--
-<div align="center">
-  <img src="docs/screenshot-menu.png" width="720" alt="Главное меню">
-  <img src="docs/screenshot-game.png" width="720" alt="Игровое поле">
-  <img src="docs/screenshot-battle.png" width="720" alt="Code-Battle">
-  <img src="docs/screenshot-archive.png" width="720" alt="Архив">
-</div>
--->
-
----
 
 ## Установка и запуск
 
@@ -286,10 +270,6 @@ classDiagram
 
 ---
 
-## Лицензия
-
-MIT — см. `LICENSE` (при необходимости добавь в репозиторий).
-
 ---
 
 ## Благодарности
@@ -345,140 +325,4 @@ MIT — см. `LICENSE` (при необходимости добавь в ре�
 
 ---
 
-# English Version
-
-## Table of Contents
-
-- [Features](#features)
-- [Screenshots / Demo](#screenshots--demo)
-- [Install & Run](#install--run)
-- [Controls](#controls)
-- [Game Modes](#game-modes)
-- [Project Structure](#project-structure)
-- [Data & JSON Formats](#data--json-formats)
-- [Difficulty & Game Over](#difficulty--game-over)
-- [Architecture (Mermaid)](#architecture-mermaid)
-- [FAQ](#faq)
-- [Roadmap](#roadmap-1)
-- [License](#license)
-- [Credits](#credits)
-
----
-
-## Features
-
-- 🎯 **8×8 puzzle board** — drag-n-drop shapes, clear lines, score points.
-- 🧠 **Python quiz** every N lines — always 4 options, shuffled in-game.
-- 💻 **Code-Battle (PRO)** — embedded code editor with syntax highlight, timer, autocomplete.  
-  ▸ **Templates are empty** — players must write the solution.  
-  ▸ **Correct code + explanation live only in the Archive**.
-- 🏆 **Achievements & highscores** — persisted in JSON.
-- 🎛️ **NUB/PRO toggle** — compact button to the **right** of “Start Game”.  
-  ▸ *NUB*: quiz only. ▸ *PRO*: quiz + code-battle.
-- 🗂️ **Archive** window — shows **all tasks** from the catalog with solutions & explanations. Button at **bottom-right** of main menu.
-- ✨ **Minimal UI & particles**, ghost outlines and snapping.
-
----
-
-## Screenshots / Demo
-
-> Put images into `docs/` and uncomment the block above.
-
----
-
-## Install & Run
-
-```bash
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
-
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
-pip install pygame
-python main.py
-```
-
----
-
-## Controls
-
-- Mouse — drag shapes.  
-- `R` — reroll shapes.  
-- Events every 5 lines:
-  - NUB: quiz.
-  - PRO: 50/50 quiz or code-battle.
-- Quiz: keys `1–4`.  
-- Code-Battle: `Tab`, `Ctrl+Enter`, `H`, arrows/Home/End.  
-- `ESC` — main menu.
-
----
-
-## Game Modes
-
-- **NUB** — quiz only.  
-- **PRO** — quiz + code-battle.  
-Switch via compact **NUB/PRO** button (to the right of “Start Game”).
-
----
-
-## Project Structure
-
-See the Russian section above — same layout.
-
----
-
-## Data & JSON Formats
-
-- `data/questions.json` — multiple-choice quiz (4 options, `correct` is 0..3).  
-- `data/code_battles_catalog.json` — **catalog** of all code-battle tasks; used by both gameplay and the **Archive** (solutions + explanations).  
-- `data/code_battles.json` — log of finished battles (for analytics).
-
----
-
-## Difficulty & Game Over
-
-- Shapes are grouped as **simple / medium / complex**; probabilities shift with score.  
-- Move scoring considers **adjacency** and **potential lines**.  
-- **Game over** when none of the three shapes can be placed.
-
----
-
-## Architecture (Mermaid)
-
-See the diagram in the Russian section.
-
----
-
-## FAQ
-
-- If text is invisible on buttons — prefer `pygame.font.SysFont(None, size)`.  
-- Ensure Python 3.9+ and `pip install pygame`.  
-- Quiz: make sure each question has **exactly 4 options**.  
-- Solutions are **not shown** during Code-Battle — check **Archive** window.
-
----
-
-## Roadmap
-
-- Online leaderboard.  
-- Smarter shape generator with hole detection.  
-- Themes.  
-- Progress import/export.
-
----
-
-## License
-
-MIT.
-
----
-
-## Credits
-
-Author & inspiration: **Tima0707** 💙  
-Pygame & Python community.
 
