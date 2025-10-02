@@ -1,5 +1,3 @@
-<div align="center">
- 
 # Python Blaster: Code & Clear
 
 
@@ -13,7 +11,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 [![Made by](https://img.shields.io/badge/Made%20by-Tima0707-blueviolet)](#credits)
 
-**[English version below ⬇️](#english-version)**
+
 </div>
 
 ---
