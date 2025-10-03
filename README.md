@@ -2,7 +2,9 @@
 
 
 <div align="center">
-![photo_2025-08-26_10-08-01](https://github.com/user-attachments/assets/7eb69978-ff03-4e27-8fd0-2b84a940722f)
+
+  
+![CleanShot 2025-10-01 at 20 11 30@2x](https://github.com/user-attachments/assets/7eb69978-ff03-4e27-8fd0-2b84a940722f)
 
 **Аркадная головоломка с фигурами, викториной по Python и Code-Battle редактором.**  
 Минималистичный дизайн, плавные частицы, достижения, JSON-каталоги задач и вопросов, режим **НУБ/ПРО** и окно **Архив**.
