@@ -2,9 +2,11 @@
 
 
 <div align="center">
+  <img width="1399" height="699" alt="Безымянный" src="https://github.com/user-attachments/assets/c4c6adf6-dd8f-4796-885e-da3127a21e8b" />
 
-  
-![CleanShot 2025-10-01 at 20 11 30@2x](https://github.com/user-attachments/assets/7eb69978-ff03-4e27-8fd0-2b84a940722f)
+
+
+
 
 **Аркадная головоломка с фигурами, викториной по Python и Code-Battle редактором.**  
 Минималистичный дизайн, плавные частицы, достижения, JSON-каталоги задач и вопросов, режим **НУБ/ПРО** и окно **Архив**.
@@ -59,8 +61,8 @@
 
 ```bash
 # 1) Клонируй
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
+git clone https://github.com/Tima0707/PythonBlaster.git
+cd repo
 
 # 2) Виртуальное окружение (опционально)
 python -m venv .venv
@@ -109,12 +111,11 @@ python main.py
 .
 ├── main.py                          # Вся логика игры (однофайловая сборка)
 ├── data/
-│   ├── questions.json               # Вопросы викторины
-│   ├── code_battles_catalog.json    # Каталог задач code-battle + решения/объяснения
-│   ├── code_battles.json            # Лог сыгранных баттлов (создаётся автоматически)
-│   └── game_data.json               # Статистика/рекорды (создаётся автоматически)
-└── docs/
-    └── screenshot-*.png             # Скриншоты (необязательно)
+   ├── questions.json               # Вопросы викторины
+   ├── code_battles_catalog.json    # Каталог задач code-battle + решения/объяснения
+   ├── code_battles.json            # Лог сыгранных баттлов (создаётся автоматически)
+   └── game_data.json               # Статистика/рекорды (создаётся автоматически)
+
 ```
 
 ---
